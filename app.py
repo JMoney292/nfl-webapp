@@ -255,13 +255,19 @@ with tabs[0]:
         home_ml = st.text_input("Home ML (American, optional)", value="-165")
         away_ml = st.text_input("Away ML (American, optional)", value="+145")
         st.caption("ML used only if no spread/total edge.")
+       
+if market_spread is not None:
+    mkt_margin = -float(market_spread)          # e.g., home +5.5  -> market margin = -5.5
+    spread_edge = model_spread - mkt_margin     # + means model is more pro-home than market
+    if abs(spread_edge) >= edge_spread:
+        if spread_edge >= 0:
+            # Bet the HOME side at the posted home spread
+            rec = f"HOME {market_spread:+.1f}"
+        else:
+            # Bet the AWAY side at the opposite spread
+            rec = f"AWAY {-market_spread:+.1f}"
+        details["spread_edge_pts"] = float(spread_edge)
 
-    if st.button("Predict Game", type="primary"):
-        if st.session_state.predictor is None:
-            st.warning("Training a quick demo model for you now.")
-            sp = SportsPredictor(DEFAULT_FEATURES)
-            st.session_state.metrics = sp.fit(build_synthetic(800))
-            st.session_state.predictor = sp
 
         row = pd.Series({
             "home_elo": home_elo, "away_elo": away_elo,
